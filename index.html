@@ -1,330 +1,186 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analizador Inteligente de Causa Raíz SST</title>
-    <style>
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #111827;
-            --accent-yellow: #f59e0b;
-            --accent-blue: #3b82f6;
-            --accent-red: #ef4444;
-            --text-color: #e5e7eb;
-            --border-color: #1f2937;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test de Vigilancia y Fatiga (PVT)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #f4f6f9; }
+    .container { width: 90%; max-width: 450px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+    h2 { margin-bottom: 15px; color: #1e293b; }
+    .form-group { margin-bottom: 15px; text-align: left; }
+    label { font-size: 14px; color: #475569; font-weight: bold; }
+    input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 16px; }
+    button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    button:disabled { background: #94a3b8; }
+    
+    /* Zona interactiva de estímulo */
+    #test-zone {
+      width: 100%; height: 250px; border-radius: 10px; margin: 20px 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: bold; color: #fff; cursor: pointer; user-select: none;
+    }
+    .waiting { background-color: #64748b; } /* Gris - Espera */
+    .active { background-color: #dc2626; }  /* Rojo - ¡TOCAR AHORA! */
+    .early { background-color: #d97706; }   /* Naranja - Toco antes de tiempo */
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            max-width: 950px;
-            width: 100%;
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid var(--border-color);
-        }
-
-        h2 {
-            color: var(--accent-yellow);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.4rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        textarea, input[type="text"], input[type="password"] {
-            width: 100%;
-            background: #1f2937;
-            border: 1px solid #374151;
-            color: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-family: inherit;
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-        }
-
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-
-        .selector-tipo {
-            display: flex;
-            gap: 15px;
-            margin: 10px 0 15px 0;
-            align-items: center;
-        }
-
-        .radio-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            background: #1f2937;
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: 1px solid #374151;
-            font-size: 0.9rem;
-        }
-
-        .radio-label input[type="radio"] {
-            accent-color: var(--accent-yellow);
-        }
-
-        .btn-analizar {
-            background-color: #4f46e5;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.95rem;
-            width: 100%;
-            transition: background 0.2s;
-        }
-
-        .btn-analizar:hover {
-            background-color: #4338ca;
-        }
-
-        .btn-analizar:disabled {
-            background-color: #374151;
-            cursor: not-allowed;
-        }
-
-        /* Estilos Metodología SCAT */
-        .scat-card {
-            background: #171e2e;
-            border-left: 4px solid var(--accent-blue);
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-        }
-
-        .scat-card.critico { border-left-color: var(--accent-red); }
-        .scat-card.raiz { border-left-color: var(--accent-yellow); background: #241a08; }
-
-        .scat-title {
-            font-weight: bold;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #9ca3af;
-            margin-bottom: 4px;
-        }
-
-        /* Estilos Metodología 5 Porqués */
-        .porque-box {
-            background: #171e2e;
-            border: 1px solid #2d3748;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .porque-box.causa-raiz {
-            border: 2px solid var(--accent-yellow);
-            background: #241a08;
-        }
-
-        .badge {
-            background: #d97706;
-            color: #fff;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            white-space: nowrap;
-        }
-
-        .porque-box.causa-raiz .badge {
-            background: var(--accent-yellow);
-            color: #000;
-        }
-
-        .content-text {
-            color: #f3f4f6;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .loader {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            font-weight: bold;
-            color: var(--accent-yellow);
-        }
-    </style>
+    .hidden { display: none; }
+    .results { text-align: left; margin-top: 15px; font-size: 14px; color: #334155; }
+    .alert-box { padding: 12px; border-radius: 6px; font-weight: bold; margin-top: 10px; text-align: center; }
+    .alert-ok { background-color: #dcfce7; color: #15803d; }
+    .alert-warning { background-color: #fef3c7; color: #b45309; }
+    .alert-danger { background-color: #fee2e2; color: #b91c1c; }
+  </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>⚡ Módulo Inteligente de Investigación SST (SCAT / 5 Porqués)</h2>
-    
-    <div class="input-section">
-        <label for="api_key">Clave API de OpenAI (sk-...):</label>
-        <input type="password" id="api_key" placeholder="Ingrese su OpenAI API Key para activar la IA experta...">
+  <h2>Control de Fatiga y Somnolencia</h2>
 
-        <label for="incidente">Descripción del Evento:</label>
-        <textarea id="incidente" placeholder="Ingrese la descripción del evento...">El día 22/09/2026, a las 15:20 horas, el colaborador Evel Tavara realizaba labores de pintado de un contenedor. La pistola se obstruyó y el trabajador procedió a ajustar la boquilla de forma manual sosteniendo el cuerpo con la mano derecha (dedos en el gatillo) y la mano izquierda frente a la boquilla. Accionó involuntariamente el gatillo, generando una descarga a presión que provocó una lesión superficial en su mano izquierda.</textarea>
-        
-        <div class="selector-tipo">
-            <span style="font-weight: 600; font-size: 0.9rem;">Tipificación:</span>
-            <label class="radio-label">
-                <input type="radio" name="tipo_evento" value="accidente" checked> Accidente de Trabajo (Metodología SCAT)
-            </label>
-            <label class="radio-label">
-                <input type="radio" name="tipo_evento" value="incidente"> Incidente / Casi-Accidente (5 Porqués)
-            </label>
-        </div>
-
-        <label for="datos_extra">Datos adicionales / Precisiones del Investigador (Opcional):</label>
-        <input type="text" id="datos_extra" placeholder="Ej: No contaba con PETS firmado, omisión de bloqueo de energía residual...">
-
-        <button class="btn-analizar" id="btnProcesar" onclick="analizarConIA()">Generar Análisis Inteligente SST</button>
+  <!-- Registro de Colaborador -->
+  <div id="setup-section">
+    <div class="form-group">
+      <label for="worker-id">DNI / Código de Trabajador:</label>
+      <input type="text" id="worker-id" placeholder="Ej. 70123456">
     </div>
+    <button onclick="startAssessment()">Iniciar Evaluación</button>
+  </div>
 
-    <div id="loader" class="loader">🧠 Analizando evento con criterio de Experto SST...</div>
-    <div id="contenedor-resultados"></div>
+  <!-- Zona de la prueba -->
+  <div id="test-section" class="hidden">
+    <p id="instruction-text">Atento: presiona la pantalla en cuanto cambie a **ROJO**.</p>
+    <div id="test-zone" class="waiting" onclick="handleTap()">
+      Toca para iniciar
+    </div>
+    <p>Intento <span id="current-attempt">0</span> de <span id="total-attempts">5</span></p>
+  </div>
+
+  <!-- Resultados del test -->
+  <div id="result-section" class="hidden">
+    <h3>Resultado de la Evaluación</h3>
+    <div id="status-alert" class="alert-box"></div>
+    <div class="results">
+      <p><strong>Tiempo Promedio de Reacción:</strong> <span id="avg-time"></span> ms</p>
+      <p><strong>Anticipaciones (Falsos toques):</strong> <span id="early-taps"></span></p>
+      <p><strong>Lapses (>500 ms):</strong> <span id="lapses-count"></span></p>
+    </div>
+    <br>
+    <button onclick="resetApp()">Nueva Evaluación</button>
+  </div>
 </div>
 
 <script>
-async function analizarConIA() {
-    const apiKey = document.getElementById('api_key').value.trim();
-    const texto = document.getElementById('incidente').value.trim();
-    const datosExtra = document.getElementById('datos_extra').value.trim();
-    const esAccidente = document.querySelector('input[name="tipo_evento"]:checked').value === 'accidente';
-    const contenedor = document.getElementById('contenedor-resultados');
-    const loader = document.getElementById('loader');
-    const btn = document.getElementById('btnProcesar');
+  const TOTAL_ROUNDS = 5;
+  let attempts = [];
+  let currentRound = 0;
+  let earlyTapsCount = 0;
+  let startTime = 0;
+  let timerId = null;
+  let state = 'IDLE'; // IDLE, WAITING, READY
 
-    if (!apiKey) {
-        alert("Por favor, ingrese una clave de API válida de OpenAI.");
-        return;
+  function startAssessment() {
+    const workerId = document.getElementById('worker-id').value.trim();
+    if (!workerId) {
+      alert('Por favor ingrese el DNI o código del colaborador.');
+      return;
     }
-    if (!texto) {
-        alert("Ingrese la descripción del incidente.");
-        return;
+    
+    document.getElementById('setup-section').classList.add('hidden');
+    document.getElementById('test-section').classList.remove('hidden');
+    document.getElementById('total-attempts').innerText = TOTAL_ROUNDS;
+    resetTestState();
+  }
+
+  function resetTestState() {
+    currentRound = 0;
+    attempts = [];
+    earlyTapsCount = 0;
+    nextRound();
+  }
+
+  function nextRound() {
+    if (currentRound >= TOTAL_ROUNDS) {
+      finishTest();
+      return;
     }
 
-    loader.style.display = "block";
-    contenedor.innerHTML = "";
-    btn.disabled = true;
+    state = 'WAITING';
+    const zone = document.getElementById('test-zone');
+    zone.className = 'waiting';
+    zone.innerText = 'Atento...';
+    document.getElementById('current-attempt').innerText = currentRound + 1;
 
-    // Construcción del Prompt Experto para SST
-    let promptSistema = "";
-    if (esAccidente) {
-        promptSistema = `Eres un auditor experto en Seguridad y Salud en el Trabajo (SST). Analiza el siguiente Accidente de Trabajo usando la metodología SCAT (Systematic Cause Analysis Technique).
-Devuelve UNICAMENTE un objeto JSON con la siguiente estructura exacta:
-{
-  "metodologia": "SCAT",
-  "items": [
-    {"etapa": "1. EVALUACIÓN DE LA PÉRDIDA", "clase": "critico", "detalle": "..."},
-    {"etapa": "2. EVENTO / INCIDENTE (Contacto)", "clase": "", "detalle": "..."},
-    {"etapa": "3. CAUSAS INMEDIATAS (Actos y Condiciones)", "clase": "", "detalle": "..."},
-    {"etapa": "4. CAUSAS BÁSICAS (Factores Personales y de Trabajo)", "clase": "", "detalle": "..."},
-    {"etapa": "5. FALLA DE CONTROL (Causa Raíz SCAT)", "clase": "raiz", "detalle": "..."}
-  ]
-}`;
+    // Intervalo aleatorio entre 2 y 4.5 segundos
+    const randomDelay = Math.floor(Math.random() * 2500) + 2000;
+
+    timerId = setTimeout(() => {
+      state = 'READY';
+      zone.className = 'active';
+      zone.innerText = '¡PRESIONA AHORA!';
+      startTime = Date.now();
+    }, randomDelay);
+  }
+
+  function handleTap() {
+    const zone = document.getElementById('test-zone');
+
+    if (state === 'WAITING') {
+      // Tocó demasiado pronto
+      clearTimeout(timerId);
+      earlyTapsCount++;
+      zone.className = 'early';
+      zone.innerText = '¡Demasiado pronto!';
+      state = 'PENALTY';
+      setTimeout(() => {
+        nextRound();
+      }, 1200);
+
+    } else if (state === 'READY') {
+      // Reacción correcta
+      const reactionTime = Date.now() - startTime;
+      attempts.push(reactionTime);
+      currentRound++;
+      zone.innerText = reactionTime + ' ms';
+      state = 'IDLE';
+      setTimeout(() => {
+        nextRound();
+      }, 1000);
+    }
+  }
+
+  function finishTest() {
+    document.getElementById('test-section').classList.add('hidden');
+    document.getElementById('result-section').classList.remove('hidden');
+
+    const sum = attempts.reduce((a, b) => a + b, 0);
+    const avg = Math.round(sum / attempts.length);
+    const lapses = attempts.filter(time => time > 500).length;
+
+    document.getElementById('avg-time').innerText = avg;
+    document.getElementById('early-taps').innerText = earlyTapsCount;
+    document.getElementById('lapses-count').innerText = lapses;
+
+    const alertBox = document.getElementById('status-alert');
+
+    // Criterios de Evaluación
+    if (avg <= 350 && lapses === 0 && earlyTapsCount <= 1) {
+      alertBox.className = 'alert-box alert-ok';
+      alertBox.innerText = 'APTO: Nivel de alerta óptimo.';
+    } else if (avg <= 480 || lapses === 1) {
+      alertBox.className = 'alert-box alert-warning';
+      alertBox.innerText = 'PRECAUCIÓN: Fatiga Leve / Moderada. Monitorear.';
     } else {
-        promptSistema = `Eres un auditor experto en Seguridad y Salud en el Trabajo (SST). Analiza el siguiente Incidente/Casi-Accidente usando el Método de los 5 Porqués.
-Devuelve UNICAMENTE un objeto JSON con la siguiente estructura exacta:
-{
-  "metodologia": "5PORQUES",
-  "items": [
-    {"num": "1º Porqué", "pregunta": "...", "respuesta": "..."},
-    {"num": "2º Porqué", "pregunta": "...", "respuesta": "..."},
-    {"num": "3º Porqué", "pregunta": "...", "respuesta": "..."},
-    {"num": "4º Porqué", "pregunta": "...", "respuesta": "..."},
-    {"num": "5º Porqué (Causa Raíz)", "pregunta": "...", "respuesta": "...", "esRaiz": true}
-  ]
-}`;
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerText = 'NO APTO: Fatiga Elevada. Iniciar protocolo de pausa/relevo.';
     }
+  }
 
-    const payloadUser = `Descripción del evento: ${texto}\nDatos adicionales del investigador: ${datosExtra || "Ninguno"}`;
-
-    try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [
-                    { role: "system", content: promptSistema },
-                    { role: "user", content: payloadUser }
-                ],
-                response_format: { type: "json_object" },
-                temperature: 0.2
-            })
-        });
-
-        const data = await response.json();
-        const resultado = JSON.parse(data.choices[0].message.content);
-
-        // Renderizado dinámico garantizado por IA
-        if (resultado.metodologia === "SCAT") {
-            resultado.items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = `scat-card ${item.clase}`;
-                div.innerHTML = `
-                    <div class="scat-title">${item.etapa}</div>
-                    <div class="content-text" style="white-space: pre-line;">${item.detalle}</div>
-                `;
-                contenedor.appendChild(div);
-            });
-        } else {
-            resultado.items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = `porque-box ${item.esRaiz ? 'causa-raiz' : ''}`;
-                div.innerHTML = `
-                    <span class="badge">${item.num}</span>
-                    <div>
-                        <div style="font-weight:bold; color:#9ca3af; font-size:0.85rem; margin-bottom:2px;">${item.pregunta}</div>
-                        <div class="content-text">${item.respuesta}</div>
-                    </div>
-                `;
-                contenedor.appendChild(div);
-            });
-        }
-
-    } catch (error) {
-        alert("Error al conectar con la API: " + error.message);
-    } finally {
-        loader.style.display = "none";
-        btn.disabled = false;
-    }
-}
+  function resetApp() {
+    document.getElementById('worker-id').value = '';
+    document.getElementById('result-section').classList.add('hidden');
+    document.getElementById('setup-section').classList.remove('hidden');
+  }
 </script>
 
 </body>
