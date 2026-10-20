@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test de Atención y Evaluación Cognitiva - SST</title>
+  <title>Test de Fatiga y Atención - SST</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #0f172a; color: #f8fafc; }
-    .card { width: 92%; max-width: 480px; background: #1e293b; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); text-align: center; border: 1px solid #334155; }
+    .card { width: 92%; max-width: 500px; background: #1e293b; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); text-align: center; border: 1px solid #334155; }
     h2 { font-size: 20px; margin-bottom: 15px; color: #38bdf8; }
     .form-group { text-align: left; margin-bottom: 20px; }
     label { font-size: 13px; color: #94a3b8; font-weight: bold; }
@@ -29,19 +29,24 @@
     .bg-math { background-color: #d97706; color: #ffffff; }
 
     .hidden { display: none; }
-    .status-badge { padding: 10px; border-radius: 8px; font-weight: bold; margin: 15px 0; font-size: 15px; }
-    .badge-ok { background-color: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
-    .badge-warn { background-color: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid #eab308; }
-    .badge-danger { background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .status-badge { padding: 12px; border-radius: 8px; font-weight: bold; margin: 15px 0; font-size: 16px; text-transform: uppercase; }
+    
+    /* Colores para los 5 niveles */
+    .badge-optimo { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .badge-bajo { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+    .badge-medio { background-color: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid #eab308; }
+    .badge-alto { background-color: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #f97316; }
+    .badge-critico { background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
 
     .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; margin-top: 15px; font-size: 13px; color: #cbd5e1; }
     .metrics-item { background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; }
+    .recommendation-box { background: #0f172a; border-left: 4px solid #38bdf8; padding: 12px; margin-top: 15px; text-align: left; font-size: 13px; color: #e2e8f0; border-radius: 0 8px 8px 0; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>Test de Atención Multiestímulo (PVT+)</h2>
+  <h2>Test de Fatiga y Atención - SST</h2>
 
   <!-- Paso 1: Ingreso -->
   <div id="step-setup">
@@ -58,34 +63,36 @@
     <div id="stimulus-box" class="bg-waiting" onclick="handleTouch()">
       <span id="stimulus-text">Atento a la pantalla...</span>
     </div>
-    <p id="instruction-sub" style="font-size: 12px; color: #64748b;">Lee atentamente las instrucciones en cada cambio.</p>
+    <p id="instruction-sub" style="font-size: 12px; color: #64748b;">Responde según la regla del estímulo.</p>
   </div>
 
   <!-- Paso 3: Resultados -->
   <div id="step-results" class="hidden">
-    <h3>Resultado Diagnóstico</h3>
+    <h3>Resultado de Evaluación</h3>
     <div id="result-badge" class="status-badge"></div>
     
     <div class="metrics-grid">
       <div class="metrics-item"><strong>Reacción Promedio:</strong> <br><span id="m-avg">0</span> ms</div>
-      <div class="metrics-item"><strong>Inhibición (Errores No-Go):</strong> <br><span id="m-nogo-err">0</span></div>
-      <div class="metrics-item"><strong>Fallos de Cálculo/Lógica:</strong> <br><span id="m-logic-err">0</span></div>
-      <div class="metrics-item"><strong>Lapses / Micro-sueños (>550ms):</strong> <br><span id="m-lapses">0</span></div>
+      <div class="metrics-item"><strong>Errores de Inhibición:</strong> <br><span id="m-nogo-err">0</span></div>
+      <div class="metrics-item"><strong>Fallos Lógicos:</strong> <br><span id="m-logic-err">0</span></div>
+      <div class="metrics-item"><strong>Lapses (>650ms):</strong> <br><span id="m-lapses">0</span></div>
+    </div>
+
+    <div class="recommendation-box">
+      <strong>Recomendación Operativa SST:</strong>
+      <p id="recommendation-text" style="margin-top: 5px;"></p>
     </div>
     <br>
-    <button onclick="resetApp()">Realizar Nuevo Test</button>
+    <button onclick="resetApp()">Nueva Evaluación</button>
   </div>
 </div>
 
 <script>
-  // Configuración de la prueba
   const TOTAL_TRIALS = 10;
   let currentTrial = 0;
-  let trialData = [];
   let startTime = 0;
   let timerId = null;
-  let currentState = 'IDLE'; // IDLE, WAITING, ACTIVE_GO, ACTIVE_NOGO, ACTIVE_EVEN
-  let currentTarget = null;
+  let currentState = 'IDLE';
 
   let metrics = {
     reactionTimes: [],
@@ -120,17 +127,12 @@
     box.innerText = 'Espere el estímulo...';
     document.getElementById('current-step').innerText = currentTrial + 1;
 
-    // Demora aleatoria entre 1.8 y 3.5 segundos
-    const delay = Math.floor(Math.random() * 1700) + 1800;
-
-    timerId = setTimeout(() => {
-      triggerStimulus();
-    }, delay);
+    const delay = Math.floor(Math.random() * 1500) + 1500;
+    timerId = setTimeout(triggerStimulus, delay);
   }
 
   function triggerStimulus() {
     const types = ['GO', 'NO_GO', 'EVEN_NUMBER', 'ODD_NUMBER'];
-    // Selección aleatoria del tipo de estímulo
     const selectedType = types[Math.floor(Math.random() * types.length)];
     const box = document.getElementById('stimulus-box');
     startTime = Date.now();
@@ -145,7 +147,6 @@
       box.className = 'bg-nogo';
       box.innerHTML = '🛑 ¡NO TOCAR! 🛑';
       
-      // Si pasan 1.8s sin tocar, se considera una inhibición exitosa
       timerId = setTimeout(() => {
         if (currentState === 'ACTIVE_NOGO') {
           currentTrial++;
@@ -153,17 +154,17 @@
         }
       }, 1800);
     } 
-    else if (selectedType === 'EVEN_NUMBER') { // Número Par -> SI TOCAR
+    else if (selectedType === 'EVEN_NUMBER') {
       currentState = 'ACTIVE_EVEN';
       const num = [2, 4, 6, 8][Math.floor(Math.random() * 4)];
       box.className = 'bg-math';
-      box.innerHTML = `Presiona solo si es PAR:<br><br><span style="font-size:40px">${num}</span>`;
+      box.innerHTML = `Presiona solo si es PAR:<br><br><span style="font-size:36px">${num}</span>`;
     } 
-    else if (selectedType === 'ODD_NUMBER') { // Número Impar -> NO TOCAR
+    else if (selectedType === 'ODD_NUMBER') {
       currentState = 'ACTIVE_ODD';
       const num = [1, 3, 5, 7][Math.floor(Math.random() * 4)];
       box.className = 'bg-math';
-      box.innerHTML = `Presiona solo si es PAR:<br><br><span style="font-size:40px">${num}</span>`;
+      box.innerHTML = `Presiona solo si es PAR:<br><br><span style="font-size:36px">${num}</span>`;
       
       timerId = setTimeout(() => {
         if (currentState === 'ACTIVE_ODD') {
@@ -182,31 +183,25 @@
       metrics.earlyTaps++;
       const box = document.getElementById('stimulus-box');
       box.className = 'bg-nogo';
-      box.innerText = '¡Anticipación! Espera la señal.';
+      box.innerText = '¡Anticipación! Cuidado.';
       currentState = 'PENALTY';
       setTimeout(runNextTrial, 1200);
     } 
-    else if (currentState === 'ACTIVE_GO') {
+    else if (currentState === 'ACTIVE_GO' || currentState === 'ACTIVE_EVEN') {
       metrics.reactionTimes.push(elapsed);
-      if (elapsed > 550) metrics.lapses++;
+      if (elapsed > 650) metrics.lapses++;
       currentTrial++;
       runNextTrial();
     } 
     else if (currentState === 'ACTIVE_NOGO') {
       clearTimeout(timerId);
-      metrics.noGoErrors++; // Error por falta de inhibición
-      currentTrial++;
-      runNextTrial();
-    } 
-    else if (currentState === 'ACTIVE_EVEN') {
-      metrics.reactionTimes.push(elapsed);
-      if (elapsed > 550) metrics.lapses++;
+      metrics.noGoErrors++;
       currentTrial++;
       runNextTrial();
     } 
     else if (currentState === 'ACTIVE_ODD') {
       clearTimeout(timerId);
-      metrics.logicErrors++; // Tocó cuando era Impar
+      metrics.logicErrors++;
       currentTrial++;
       runNextTrial();
     }
@@ -218,24 +213,41 @@
 
     const sum = metrics.reactionTimes.reduce((a, b) => a + b, 0);
     const avgTime = metrics.reactionTimes.length > 0 ? Math.round(sum / metrics.reactionTimes.length) : 0;
+    const totalErrors = metrics.noGoErrors + metrics.logicErrors + metrics.earlyTaps;
 
-    document.getElementById('m-avg').innerText = avgTime;
+    document.getElementById('m-avg').innerText = avgTime || 0;
     document.getElementById('m-nogo-err').innerText = metrics.noGoErrors;
     document.getElementById('m-logic-err').innerText = metrics.logicErrors;
     document.getElementById('m-lapses').innerText = metrics.lapses;
 
     const badge = document.getElementById('result-badge');
+    const recText = document.getElementById('recommendation-text');
 
-    // Criterios de Evaluación Cognitiva de Fatiga
-    if (avgTime <= 420 && metrics.noGoErrors === 0 && metrics.logicErrors === 0 && metrics.lapses === 0) {
-      badge.className = 'status-badge badge-ok';
-      badge.innerText = 'APTO: Excelente nivel de atención e inhibición.';
-    } else if (avgTime <= 520 && (metrics.noGoErrors + metrics.logicErrors) <= 1) {
-      badge.className = 'status-badge badge-warn';
-      badge.innerText = 'OBSERVADO: Fatiga moderada / Desatención leve.';
-    } else {
-      badge.className = 'status-badge badge-danger';
-      badge.innerText = 'NO APTO: Alto riesgo de fatiga / Lapsos atencionales críticos.';
+    // Asignación de Niveles Realistas y Recomendaciones SST
+    if (avgTime > 0 && avgTime <= 450 && totalErrors === 0 && metrics.lapses === 0) {
+      badge.className = 'status-badge badge-optimo';
+      badge.innerText = 'Nivel: Óptimo';
+      recText.innerText = 'Colaborador con excelente estado de alerta. Autorizado para todo tipo de labores, incluyendo trabajos críticos y de alto riesgo.';
+    } 
+    else if (avgTime <= 520 && totalErrors <= 1 && metrics.lapses <= 1) {
+      badge.className = 'status-badge badge-bajo';
+      badge.innerText = 'Nivel: Fatiga Baja';
+      recText.innerText = 'Atención normal dentro del promedio operativo. Puede continuar con sus actividades habituales bajo supervisión regular.';
+    } 
+    else if (avgTime <= 600 || totalErrors === 2 || metrics.lapses === 2) {
+      badge.className = 'status-badge badge-medio';
+      badge.innerText = 'Nivel: Fatiga Media';
+      recText.innerText = 'Se detectan indicios moderados de cansancio o ligera distracción. Se sugiere una pausa activa de 10 minutos antes de tareas críticas.';
+    } 
+    else if (avgTime <= 700 || totalErrors >= 3 || metrics.lapses >= 3) {
+      badge.className = 'status-badge badge-alto';
+      badge.innerText = 'Nivel: Fatiga Alto';
+      recText.innerText = 'RESTRINGIR temporalmente. No asignar trabajos en altura, espacio confinado ni operación de equipos pesados hasta nueva evaluación o descanso.';
+    } 
+    else {
+      badge.className = 'status-badge badge-critico';
+      badge.innerText = 'Nivel: Fatiga Crítico';
+      recText.innerText = 'ALERTA DE SEGURIDAD. El colaborador presenta micro-sueños o pérdida severa de reflejos. Derivar al tópico médico para evaluación y prohibir labores operativas.';
     }
   }
 
