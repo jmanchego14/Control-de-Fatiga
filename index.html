@@ -75,7 +75,7 @@
       <div class="metrics-item"><strong>Reacción Promedio:</strong> <br><span id="m-avg">0</span> ms</div>
       <div class="metrics-item"><strong>Errores de Inhibición:</strong> <br><span id="m-nogo-err">0</span></div>
       <div class="metrics-item"><strong>Fallos Lógicos:</strong> <br><span id="m-logic-err">0</span></div>
-      <div class="metrics-item"><strong>Lapses (>650ms):</strong> <br><span id="m-lapses">0</span></div>
+      <div class="metrics-item"><strong>Anticipaciones:</strong> <br><span id="m-early">0</span></div>
     </div>
 
     <div class="recommendation-box">
@@ -98,8 +98,7 @@
     reactionTimes: [],
     noGoErrors: 0,
     logicErrors: 0,
-    earlyTaps: 0,
-    lapses: 0
+    earlyTaps: 0
   };
 
   function startTest() {
@@ -111,7 +110,7 @@
     document.getElementById('total-steps').innerText = TOTAL_TRIALS;
     
     currentTrial = 0;
-    metrics = { reactionTimes: [], noGoErrors: 0, logicErrors: 0, earlyTaps: 0, lapses: 0 };
+    metrics = { reactionTimes: [], noGoErrors: 0, logicErrors: 0, earlyTaps: 0 };
     runNextTrial();
   }
 
@@ -152,7 +151,7 @@
           currentTrial++;
           runNextTrial();
         }
-      }, 1800);
+      }, 2000);
     } 
     else if (selectedType === 'EVEN_NUMBER') {
       currentState = 'ACTIVE_EVEN';
@@ -171,7 +170,7 @@
           currentTrial++;
           runNextTrial();
         }
-      }, 1800);
+      }, 2000);
     }
   }
 
@@ -189,7 +188,6 @@
     } 
     else if (currentState === 'ACTIVE_GO' || currentState === 'ACTIVE_EVEN') {
       metrics.reactionTimes.push(elapsed);
-      if (elapsed > 650) metrics.lapses++;
       currentTrial++;
       runNextTrial();
     } 
@@ -213,41 +211,40 @@
 
     const sum = metrics.reactionTimes.reduce((a, b) => a + b, 0);
     const avgTime = metrics.reactionTimes.length > 0 ? Math.round(sum / metrics.reactionTimes.length) : 0;
-    const totalErrors = metrics.noGoErrors + metrics.logicErrors + metrics.earlyTaps;
 
     document.getElementById('m-avg').innerText = avgTime || 0;
     document.getElementById('m-nogo-err').innerText = metrics.noGoErrors;
     document.getElementById('m-logic-err').innerText = metrics.logicErrors;
-    document.getElementById('m-lapses').innerText = metrics.lapses;
+    document.getElementById('m-early').innerText = metrics.earlyTaps;
 
     const badge = document.getElementById('result-badge');
     const recText = document.getElementById('recommendation-text');
 
-    // Asignación de Niveles Realistas y Recomendaciones SST
-    if (avgTime > 0 && avgTime <= 450 && totalErrors === 0 && metrics.lapses === 0) {
+    // Nuevos Umbrales Configurados
+    if (avgTime > 0 && avgTime < 800) {
       badge.className = 'status-badge badge-optimo';
       badge.innerText = 'Nivel: Óptimo';
-      recText.innerText = 'Colaborador con excelente estado de alerta. Autorizado para todo tipo de labores, incluyendo trabajos críticos y de alto riesgo.';
+      recText.innerText = 'Colaborador con excelente tiempo de respuesta. Autorizado para todo tipo de labores operativas y de alto riesgo.';
     } 
-    else if (avgTime <= 520 && totalErrors <= 1 && metrics.lapses <= 1) {
+    else if (avgTime >= 800 && avgTime < 1000) {
       badge.className = 'status-badge badge-bajo';
       badge.innerText = 'Nivel: Fatiga Baja';
-      recText.innerText = 'Atención normal dentro del promedio operativo. Puede continuar con sus actividades habituales bajo supervisión regular.';
+      recText.innerText = 'Atención normal dentro de parámetros esperados. Puede continuar con sus tareas habituales bajo supervisión regular.';
     } 
-    else if (avgTime <= 600 || totalErrors === 2 || metrics.lapses === 2) {
+    else if (avgTime >= 1000 && avgTime < 1300) {
       badge.className = 'status-badge badge-medio';
       badge.innerText = 'Nivel: Fatiga Media';
-      recText.innerText = 'Se detectan indicios moderados de cansancio o ligera distracción. Se sugiere una pausa activa de 10 minutos antes de tareas críticas.';
+      recText.innerText = 'Se detectan indicios moderados de cansancio. Se recomienda una pausa activa de 10 minutos o rotación breve antes de tareas críticas.';
     } 
-    else if (avgTime <= 700 || totalErrors >= 3 || metrics.lapses >= 3) {
+    else if (avgTime >= 1300 && avgTime <= 2000) {
       badge.className = 'status-badge badge-alto';
       badge.innerText = 'Nivel: Fatiga Alto';
-      recText.innerText = 'RESTRINGIR temporalmente. No asignar trabajos en altura, espacio confinado ni operación de equipos pesados hasta nueva evaluación o descanso.';
+      recText.innerText = 'RESTRINGIR temporalmente. No asignar trabajos en altura, espacio confinado u operación de equipos pesados hasta nueva evaluación.';
     } 
     else {
       badge.className = 'status-badge badge-critico';
-      badge.innerText = 'Nivel: Fatiga Crítico';
-      recText.innerText = 'ALERTA DE SEGURIDAD. El colaborador presenta micro-sueños o pérdida severa de reflejos. Derivar al tópico médico para evaluación y prohibir labores operativas.';
+      badge.innerText = 'Nivel: Crítico';
+      recText.innerText = 'ALERTA DE SEGURIDAD. El colaborador presenta retraso severo en reflejos (>2000ms). Derivar inmediatamente al tópico médico y suspender labores operativas.';
     }
   }
 
